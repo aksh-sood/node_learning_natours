@@ -4,8 +4,8 @@ const tourRouter = require("./routes/tourRoutes");
 const userRouter = require("./routes/userRoutes");
 
 const app = express();
-
 app.use(morgan("dev"));
+app.use(express.static(`4-natours/starter/public/`));
 
 app.use(express.json());
 app.use((req, res, next) => {
