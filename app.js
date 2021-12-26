@@ -1,6 +1,9 @@
 const express = require("express");
 const fs = require("fs");
+
 const app = express();
+
+app.use(express.json());
 
 // app.get("/", (req, res) => {
 //   res.status(200).json({ message: "Hello from the server", app: "Natours" });
@@ -11,7 +14,7 @@ const app = express();
 // });
 
 const tours = JSON.parse(
-  fs.readFileSync("4-natours/starter/dev-data/data/tours.json")
+  fs.readFileSync("4-natours/starter/dev-data/data/tours-simple.json")
 );
 
 app.get("/api/v1/tours", (req, res) => {
@@ -22,6 +25,30 @@ app.get("/api/v1/tours", (req, res) => {
       tours: tours,
     },
   });
+});
+
+app.post("/api/v1/tours", (req, res) => {
+  // res.status(200).json({});
+  // console.log(req.body);
+  var newId;
+  if (tours[tours.length - 1].id + 1 == null) {
+    newId = 0;
+  } else {
+    newId = tours[tours.length - 1].id + 1;
+  }
+  // const newId = tours[tours.length - 1].id + 1;
+  const newTour = Object.assign({ id: newId }, req.body);
+  tours.push(newTour);
+  fs.writeFile(
+    "4-natours/starter/dev-data/data/tours-simple.json",
+    JSON.stringify(tours),
+    (err) => {
+      res.status(201).json({
+        status: "success",
+        data: { tour: newTour },
+      });
+    }
+  );
 });
 
 const port = 3000;
