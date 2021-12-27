@@ -1,7 +1,6 @@
 const app = require("./app");
 const dotenv = require("dotenv");
 const mongoose = require("mongoose");
-
 dotenv.config({ path: "./config.env" });
 
 const DB = process.env.DATABASE.replace(
@@ -16,11 +15,9 @@ mongoose
     useFindAndModify: false,
   })
   .then((con) => {
-    console.log(con.connections);
     console.log("DB connected succesfully");
   });
 
-console.log(process.env);
 const port = process.env.PORT;
 app.listen(port, () => {
   console.log(`app is running on port ${port}`);
