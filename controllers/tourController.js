@@ -21,68 +21,82 @@ const mongoose = require("mongoose");
 //   next();
 // };
 
-exports.getAllTours = async(req, res) => {
-  try{
+exports.getAllTours = async (req, res) => {
+  try {
     //FILTERING
-    const queryObj={...req.query};
-    const excludedFields=["page","sort","fields","limit"];
-    excludedFields.forEach(el=>delete queryObj[el]);
+    const queryObj = { ...req.query };
+    const excludedFields = ["page", "sort", "fields", "limit"];
+    excludedFields.forEach(el => delete queryObj[el]);
 
 
     //FILTERING ADVANCED
-    let queryStr= JSON.stringify(queryObj);
-    queryStr=queryStr.replace(/\b(gte|gt|lte|lt)\b/g,match=>`$${match}`);
+    let queryStr = JSON.stringify(queryObj);
+    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
     console.log(JSON.parse(queryStr));
 
-    let query= Tour.find(JSON.parse(queryStr));
+    let query = Tour.find(JSON.parse(queryStr));
 
     //SORTING
-    if(req.query.sort){
-      const sortBy=req.query.sort.split(",").join(" ");
-     
-     query=query.sort(sortBy); 
-    }else{
-      query=query.sort("-createdAt");
+    if (req.query.sort) {
+      const sortBy = req.query.sort.split(",").join(" ");
+
+      query = query.sort(sortBy);
+    } else {
+      query = query.sort("-createdAt");
     }
+
     //FIELD LIMITING
-    if(req.query.fields){
-      const fields=req.query.fields.split(",").join(" ");
+    if (req.query.fields) {
+      const fields = req.query.fields.split(",").join(" ");
       console.log(fields);
-      query=query.select(fields);
-    }else{
-      query=query.select("-__v");
+      query = query.select(fields);
+    } else {
+      query = query.select("-__v");
+    }
+
+    //PAGINATION
+    const page=req.query.page*1||1;
+    const limit=req.query.limit*1||100;
+    const skipVal=(page-1)*limit;
+    query=query.skip(skipVal).limit(limit);
+    if(req.query.page){
+      const numTours=await Tours.countDocuments();
+      if(skipVal>=numTours){
+        throw new ERROR("page does not exist");
+      }
     }
 
 
-    const tours=await query;
-// const query=Tour.find().where("duration").equals(5).where("easy");
-  res.status(200).json({
-    status: "success",
-    requestedAt: req.requestTime,
-    results: tours.length,
-    data: {
-    tours: tours,
-    },
-  });}catch(err){
-   res.status(404).json({ status:"fail",message:err}) 
+    const tours = await query;
+    // const query=Tour.find().where("duration").equals(5).where("easy");
+    res.status(200).json({
+      status: "success",
+      requestedAt: req.requestTime,
+      results: tours.length,
+      data: {
+        tours: tours,
+      },
+    });
+  } catch (err) {
+    res.status(404).json({ status: "fail", message: err })
   }
 };
 
-exports.getTour = async(req, res) => {
-  
+exports.getTour = async (req, res) => {
 
-try{
- const tour= await Tour.findById(req.params.id);
-res.status(200).json({
-  status:"success",
-  data:{tour}
-});
-}catch(err){
-  res.status(404).json({
-    status:"error",
-    message:err
-  });
-}
+
+  try {
+    const tour = await Tour.findById(req.params.id);
+    res.status(200).json({
+      status: "success",
+      data: { tour }
+    });
+  } catch (err) {
+    res.status(404).json({
+      status: "error",
+      message: err
+    });
+  }
 
   const id = req.params.id * 1;
 
@@ -97,58 +111,58 @@ res.status(200).json({
   });
 };
 
-exports.createTour =async (req, res) => {
+exports.createTour = async (req, res) => {
 
-//   try{
-//     const{
-//         name,
-//         rating,
-//         price
-//        } = req.body;
+  //   try{
+  //     const{
+  //         name,
+  //         rating,
+  //         price
+  //        } = req.body;
 
-//       let newTour = new Tour({
-//           // _id : new mongoose.Types.ObjectId(),
-//           name,
-//           rating,
-//           price
-//       });
-//       await newTour.save();
-//       res.status(201).json({message: "Tour Created", data: newTour});
-//   }
-//        catch(err) {
-//        console.log(err);
-//        res.status(500).json({
-//        error:err
-//        });
-// }
+  //       let newTour = new Tour({
+  //           // _id : new mongoose.Types.ObjectId(),
+  //           name,
+  //           rating,
+  //           price
+  //       });
+  //       await newTour.save();
+  //       res.status(201).json({message: "Tour Created", data: newTour});
+  //   }
+  //        catch(err) {
+  //        console.log(err);
+  //        res.status(500).json({
+  //        error:err
+  //        });
+  // }
   // const newId = tours[tours.length - 1].id + 1;
   // const newTour = Object.assign({ id: newId }, req.body);
-//   console.log(req.body);
-try{
-  const newTour =await Tour.create(req.body);
+  //   console.log(req.body);
+  try {
+    const newTour = await Tour.create(req.body);
 
-      res.status(201).json({
-        status: "success",
-        data: { tour: newTour },
-      });
+    res.status(201).json({
+      status: "success",
+      data: { tour: newTour },
+    });
 
-    }catch(err){
-      res.status(400).json(
-        {status:"fail", message:err}
-      )
-    }
+  } catch (err) {
+    res.status(400).json(
+      { status: "fail", message: err }
+    )
+  }
 };
 
-exports.updateTour = async(req, res) => {
-  try{
-    const tour=await Tour.findByIdAndUpdate(req.params.id, req.body,{new:true,runValidators:true});
+exports.updateTour = async (req, res) => {
+  try {
+    const tour = await Tour.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
     res.status(200).json({
       status: "success",
       data: {
         tour,
       },
     });
-  }catch(err){
+  } catch (err) {
     res.status(404).json({
       status: "failed",
       message: err
@@ -157,18 +171,19 @@ exports.updateTour = async(req, res) => {
 
 };
 
-exports.deleteTour =async (req, res) => {
+exports.deleteTour = async (req, res) => {
 
-  try{ 
-    const tour =await Tour.findByIdAndDelete(req.params.id);
+  try {
+    const tour = await Tour.findByIdAndDelete(req.params.id);
     res.status(204).json({
-    status: "success",
-    data: null,
-  });}catch(err){
+      status: "success",
+      data: null,
+    });
+  } catch (err) {
     res.status(404).json({
       status: "failed",
       message: err
     });
   }
- 
+
 };
