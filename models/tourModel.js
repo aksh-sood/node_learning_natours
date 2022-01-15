@@ -37,22 +37,16 @@ const tourSchema = new mongoose.Schema({
     select: false
   },
   startDates: [Date]
+},
+{
+  toJSON:{ virtuals:true},
+  toObject:{ virtuals:true},
 });
+
+tourSchema.virtual("durationWeeks").get(function(){
+  return this.duration/7;
+})
+
 const Tour = mongoose.model("Tour", tourSchema);
-
-// const testTour = new Tour({
-//   name: "The Camper",
-//   price: 99,
-// });
-
-// testTour
-//   .save()
-//   .then((doc) => {
-//     console.log(doc);
-//   })
-//   .catch((err) => {
-//     console.log("ERROR 💔💔💔");
-//     console.log(err);
-//   });
 
 module.exports = Tour;
