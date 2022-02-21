@@ -167,9 +167,10 @@ exports.getTourStats = async (req, res) => {
           maxPrice: { $max: "$price" }
         }
       },
+      //this sort is to sort with respect to the new results developed by the aggregation pipeline
       { $sort: { avgPrice: 1 } },
-      // {$match:{_id:{$ne:"easy"}}}
     ]);
+    
     res.status(200).json({
       status: "success",
       data: {
